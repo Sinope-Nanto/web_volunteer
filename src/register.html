@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../css/register.css">
+</head>
+<body>
+    <div id="app">
+        <div id="register">
+            <div class="head">
+                <h4 class="title">Register</h4>
+            </div>
+            <el-divider></el-divider>
+            <div class="body">
+                <el-form ref="userForm" :model="userForm" :rule="userFormRule">
+                    <el-form-item label="First Name" class="input" prop="firstName">
+                        <el-input placeholder="Input your first name" v-model="userForm.firstName" label="User name:"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Last Name" class="input" prop="lastName">
+                        <el-input placeholder="Input your last name" v-model="userForm.lastName" label="User name:"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Password" class="input" prop="password">
+                        <el-input placeholder="Input password" show-password v-model="userForm.password" label="Password:"></el-input>
+                    </el-form-item>
+                    <el-form-item label="Confirm Password" class="input" prop="confirmPassword">
+                        <el-input placeholder="Confirm password" show-password v-model="userForm.confirmPassword" label="Confirm password:"></el-input>
+                    </el-form-item>
+                    <el-form-item class="input">
+                        <el-radio-group v-model="userForm.role">
+                            <el-radio label="Volunteer">Register as a volunteer</el-radio>
+                            <el-radio label="Donor">Register as a donor</el-radio>
+                        </el-radio-group>
+                    </el-form-item>
+                </el-form>
+            </div>
+            <div class="button-group">
+                <el-button @click="submitForm">Register</el-button>
+                <el-button @click="back('index')">Back Home</el-button>
+            </div>
+        </div>
+        <el-dialog
+                :visible.sync="successVisible"
+                width="30%"
+                :show-close="false"
+                :close-on-click-modal="false"
+                :close-on-press-escape="false"
+        >
+            <span>
+                Successful registry! Now remember your account id: {{userId}} . Click the button and back to the login page.
+            </span>
+            <el-button @click="back('login')">Login</el-button>
+        </el-dialog>
+    </div>
+</body>
+<!-- import Vue before Element -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="module">
+    import {register} from "../js/api/user.js";
+    var confirmPasswordValidator = (rule, value, callback)=>{
+        if (value.length==0){
+            callback(new Error('Please confirm your password!'))
+        }
+        else {
+            if ((value.length < 6) || (value.length > 15)) {
+                callback(new Error('The length should be between 6 and 15!'))
+            } else {
+                if (value != app.userForm.password) {
+                    callback(new Error('Entered passwords differ!'))
+                } else {
+                    callback()
+                }
+            }
+        }
+    }
+    let app = new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                userForm:{
+                    firstName: "",
+                    lastName: "",
+                    password: "",
+                    confirmPassword: "",
+                    role: "2"
+                },
+                userFormRule:{
+                    firstName: [
+                        { required: true, message: 'Please input your first name!', trigger: 'blur' },
+                        { min: 1, max: 30, message: 'The length should be between 1 and 30!', trigger: 'blur' }
+                    ],
+                    lastName: [
+                        { required: true, message: 'Please input your last name!', trigger: 'blur' },
+                        { min: 1, max: 30, message: 'The length should be between 1 and 30!', trigger: 'blur' }
+                    ],
+                    password: [
+                        { required: true, message: 'Please input your last password!', trigger: 'blur' },
+                        { min: 6, max: 15, message: 'The length should be between 6 and 15!', trigger: 'blur' }
+                    ],
+                    confirmPassword: [
+                        { required: true, validator: confirmPasswordValidator, trigger: 'blur' },
+                    ],
+                },
+                userId: "12345678",
+                successVisible: false,
+            }
+        },
+        methods:{
+            submitForm(){
+                const url = "http://127.0.0.1:8000"
+                let data = {
+                "first_name": this.userForm.firstName,
+                "last_name": this.userForm.lastName,
+                "password": this.userForm.password,
+                "role": this.userForm.role
+                }
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                var para = JSON.stringify(data)
+                let code = 200
+                let userId = ""
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        app._data.userId = json.data.id
+                        app._data.successVisible = true
+                    }
+                    else if(httpRequest.readyState == 4){
+                        this.$message.Error('register failed')
+                    }
+                }
+                httpRequest.open('POST', url + '/user/register/',false);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", "register");
+                
+                httpRequest.send(para)
+                
+            },
+
+
+            back(str){
+                if (str == "login"){
+                    window.location.href="../src/login.html"
+                }
+                if (str == "index"){
+                    window.location.href="../src/index.html"
+                }
+            },
+        }
+    })
+</script>
+</html>

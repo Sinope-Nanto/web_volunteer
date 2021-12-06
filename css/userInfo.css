@@ -1,0 +1,54 @@
+html, body{
+    height: 100%;
+    width: 100%;
+    padding: 0;
+}
+#app{
+    height: 100%;
+}
+.body{
+    height: 100%;
+}
+.head{
+    width: 100%;
+    background-color: white;
+    border: black 2px solid;
+    text-align: center;
+}
+h3{
+    color: black;
+    display: inline-block;
+}
+.user-link{
+    position: absolute;
+    right: 20px;
+    top: 30px;
+}
+.el-link{
+    color: black !important;
+    font-size: 15px !important;
+    margin-right: 10px !important;
+}
+.body-container{
+    height: 100% !important;
+}
+.aside-menu{
+    height: 90%;
+    border: 2px black solid;
+    overflow: auto;
+}
+.edit-info{
+    width: 30%;
+    height: auto;
+    text-align: center;
+    margin: 0 auto;
+    border: 2px solid black;
+    border-radius: 10px;
+    padding-top: 50px;
+}
+.button-group{
+    margin-bottom: 20px;
+}
+.user-name{
+    margin-bottom: 30px;
+}

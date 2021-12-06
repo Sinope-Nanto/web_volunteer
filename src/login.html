@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../css/login.css">
+</head>
+<body>
+    <div id="app">
+        <div id="login">
+            <div class="head">
+                <h4 class="title">Login</h4>
+            </div>
+            <el-divider></el-divider>
+            <div class="body">
+                <el-form :model="userForm" ref="userForm" :rules="userFormRule">
+                    <el-form-item class="input" prop="userId">
+                        <el-input placeholder="Input your Id" v-model="userForm.userId"></el-input>
+                    </el-form-item>
+                    <el-form-item class="input" prop="password">
+                        <el-input placeholder="Input your password" show-password v-model="userForm.password"></el-input>
+                    </el-form-item>
+                </el-form>
+            </div>
+            <div class="button-group">
+                <el-button @click="myLogin">Login</el-button>
+                <el-button @click="back">Back Home</el-button>
+            </div>
+        </div>
+
+    </div>
+</body>
+<!-- import Vue before Element -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script type="module">
+    import {login} from "../js/api/user.js";
+
+    new Vue({
+        el: '#app',
+        data: function() {
+            return {
+                userForm:{
+                    userId: "",
+                    password: "",
+                },
+                userFormRule:{
+                    userId: [
+                        { required: true, message: 'Please input your user ID!', trigger: 'blur' },
+                        { min: 6, max: 15, message: 'The length should be between 6 and 15!', trigger: 'blur' }
+                    ],
+                    password: [
+                        { required: true, message: 'Please input your password!', trigger: 'blur' },
+                        { min: 6, max: 15, message: 'The length should be between 6 and 15!', trigger: 'blur' }
+                    ],
+                },
+                role: "Admin"
+            }
+        },
+        methods:{
+            myLogin(){
+                const url = "http://127.0.0.1:8000"
+                let data = {
+                "id": this.userForm.userId,
+                "password": this.userForm.password,
+                }
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                var para = JSON.stringify(data)
+                let code = 200
+                let token = ""
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        localStorage.setItem('token', json.data.token)
+                        localStorage.setItem('role', json.data.role)
+                        window.location.href="../src/index.html"
+                    }
+                    else if(httpRequest.readyState == 4){
+                        this.$message.Error('login failed')
+                    }
+                }
+                httpRequest.open('POST', url + '/user/login/',false);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", "login");
+                
+                httpRequest.send(para)
+            },
+            // myLogin(){
+            //     // let data = {
+            //     //     'id': this.userForm.userId,
+            //     //     'password': this.userForm.password
+            //     // }
+            //     // let res = login(data)
+            //     // if (res.code == 'success'){
+            //     //     localStorage.setItem('user', this.userForm.userId)
+            //     //     localStorage.setItem('role', this.role)
+            //     //     window.location.href="../src/index.html"
+            //     // }
+            //     // else{
+            //     //     this.$message.error("Login request failed!")
+            //     // }
+            //     let res = login({id: this.userForm.userId,
+            //     password: this.userForm.password})
+            //     if (res.code == 200){
+            //         localStorage.setItem('user', this.userForm.userId)
+            //         localStorage.setItem('role', res.data.role)
+            //         window.location.href="../src/index.html"
+            //         console.log("login")
+            //     }
+            //     else{
+            //         this.$message.error(res.msg)
+            //     }
+            // },
+            back(){
+                window.location.href="../src/index.html"
+            }
+        }
+    })
+</script>
+</html>

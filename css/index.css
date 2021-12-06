@@ -1,0 +1,21 @@
+.head{
+    width: 100%;
+    background-color: white;
+    border: solid black 2px;
+    border-radius: 2px;
+    text-align: center;
+}
+h3{
+    color: black;
+    display: inline-block;
+}
+.user-link{
+    position: absolute;
+    right: 20px;
+    top: 25px;
+}
+.el-link{
+    color: black !important;
+    font-size: 15px !important;
+    margin-right: 10px !important;
+}

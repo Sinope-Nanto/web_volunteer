@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <!-- import CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <link rel="stylesheet" href="../css/userInfo.css">
+</head>
+<!-- import Vue before Element -->
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<!-- import JavaScript -->
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<body>
+<div id="app">
+    <el-container class="body">
+        <el-header class="head">
+            <h3 class="title">Welcome! Your role status is {{role}}</h3>
+            <div class="user-link">
+                <el-link :underline="false" class="el-link" href="../src/index.html">Return Home</el-link>
+                <el-link :underline="false" @click.native="logout" href="../src/index.html" class="el-link">Logout
+                </el-link>
+            </div>
+        </el-header>
+        <el-container class="body-container">
+            <el-aside>
+                <el-menu
+                        class="aside-menu"
+                        default-active="1"
+                        @select="indexChange"
+                        ref="navbar"
+                        background-color="white"
+                        text-color="black"
+                        active-text-color="blue"
+                >
+                    <el-menu-item index="1">
+                        <template #title>
+                            Personal Profile
+                        </template>
+                    </el-menu-item>
+                    <el-menu-item index="2" v-if="role=='Admin'">
+                        <template #title>
+                            User Management
+                        </template>
+                    </el-menu-item>
+                    <el-menu-item index="3" v-if="role=='Admin'">
+                        <template #title>
+                            Event Management
+                        </template>
+                    </el-menu-item>
+                    <el-menu-item index="4" v-if="role=='Admin'">
+                        <template #title>
+                            Program Management
+                        </template>
+                    </el-menu-item>
+                </el-menu>
+            </el-aside>
+            <el-main>
+                <div class="user-profile" v-if="currentIndex=='1'">
+                    <div class="edit-info">
+                        <div class="my-info">
+                            <span>User name: {{myInfo.lastName + " " + myInfo.firstName}}</span>
+                        </div>
+                        <div class="my-info">
+                            <span>User id: {{myInfo.userId}}</span>
+                        </div>
+                        <div class="my-info">
+                            <span>User role: {{myInfo.role}}</span>
+                        </div>
+                        <div class="my-info" v-if="myInfo.role=='Volunteer'">
+                            <span>Volunteer time: {{myInfo.volunteerTime}} hours</span>
+                        </div>
+                        <div class="my-info" v-if="myInfo.role=='Donor'">
+                            <span>Donation Amount: ${{myInfo.donationAmount}}</span>
+                        </div>
+                        <div class="button-group">
+                            <el-button size="medium" @click="openEditMyInfoDialog">Edit info</el-button>
+                            <el-button size="medium" @click="openEditPasswordDialog">Edit password</el-button>
+                        </div>
+                        <!--Edit my info dialog-->
+                        <el-dialog title="Edit my info" :v-if="editMyInfoDialogVisible" :visible.sync="editMyInfoDialogVisible" :append-to-body="true">
+                            <el-form :model="myInfoSubmitted" :rules="myInfoRule" ref="myInfo">
+                                <el-form-item label="User ID:">
+                                    <el-input v-model="user" :disabled="true"></el-input>
+                                </el-form-item>
+                                <el-form-item label="First name:" prop="firstName">
+                                    <el-input v-model="myInfoSubmitted.firstName"></el-input>
+                                </el-form-item>
+                                <el-form-item label="Last name:" prop="lastName">
+                                    <el-input v-model="myInfoSubmitted.lastName"></el-input>
+                                </el-form-item>
+                            </el-form>
+                            <el-button @click="editMyInfo">Submit</el-button>
+                            <el-button @click="closeEditMyInfoDialog">Exit</el-button>
+                        </el-dialog>
+
+                        <!--Edit password dialog-->
+                        <el-dialog title="Edit my password" :visible.sync="editPasswordDialogVisible"
+                                   :append-to-body="true">
+                            <el-form :model="passwordForm" :rules="passwordFormRule">
+                                <el-form-item label="User ID:" disabled="true">
+                                    <el-input v-model="user"></el-input>
+                                </el-form-item>
+                                <el-form-item label="Password:" prop="password">
+                                    <el-input placeholder="Input your password" show-password
+                                              v-model="passwordForm.password"></el-input>
+                                </el-form-item>
+                                <el-form-item label="New password:" prop="newPassword">
+                                    <el-input placeholder="Input your new password" show-password
+                                              v-model="passwordForm.newPassword"></el-input>
+                                </el-form-item>
+                                <el-form-item label="Confirm password:" prop="confirmPassword">
+                                    <el-input placeholder="Confirm your new password" show-password
+                                              v-model="passwordForm.confirmPassword"></el-input>
+                                </el-form-item>
+                            </el-form>
+                            <el-button @click="editMyPassword">Submit</el-button>
+                            <el-button @click="closeEditPasswordDialog">Exit</el-button>
+                        </el-dialog>
+                    </div>
+                </div>
+                <div class="user-management" v-if="currentIndex=='2'">
+                    <el-select v-model="userQuery.role" placeholder="Select role" clearable>
+                        <el-option
+                                v-for="item in roleList"
+                                :key="item"
+                                :label="item"
+                                :value="item"
+                        >
+                        </el-option>
+                    </el-select>
+                    <el-button @click="queryUser" type="primary">Query</el-button>
+                    <el-table
+                            :data="userList"
+                            style="width:100%"
+                            :fit="false"
+                            fit
+                            :v-loading="userListLoading"
+                            row-key="id"
+                            border
+                            highlight-current-row
+                    >
+                        <el-table-column
+                                label="User ID"
+                                align="center"
+                                min-width="20%">
+                            <template slot-scope="{row}">
+                                <span>{{row.userId}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="User Name"
+                                align="center"
+                                min-width="20%">
+                            <template slot-scope="{row}">
+                                <span>{{row.lastName + " " + row.firstName}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Role"
+                                align="center"
+                                min-width="10%">
+                            <template slot-scope="{row}">
+                                <span>{{row.role}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Status"
+                                align="center"
+                                min-width="10%">
+                            <template slot-scope="{row}">
+                                <span>{{statusList[row.status]}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Operations"
+                                align="center"
+                                min-width="40%">
+                            <template slot-scope="{row}">
+                                <el-link type="primary" @click="openEditUserDialog(row)" :underline="false">Edit
+                                </el-link>
+                                <!--edit user info detail-->
+                                <el-dialog :visible.sync="editUserDialogVisible" :inline="true" title="Edit user">
+                                    <el-form v-model="userInfo">
+                                        <el-form-item label="User ID:" disabled="true">
+                                            <el-input v-model="userInfo.userId"></el-input>
+                                        </el-form-item>
+
+                                        <el-form-item label="First name:">
+                                            <el-input v-model="userInfo.firstName"></el-input>
+                                        </el-form-item>
+
+                                        <el-form-item label="Last name:">
+                                            <el-input v-model="userInfo.lastName"></el-input>
+                                        </el-form-item>
+
+                                        <el-form-item label="Role:">
+                                            <el-select v-model="userInfo.role">
+                                                <el-option
+                                                        v-for="item in roleList"
+                                                        :key="item"
+                                                        :label="item"
+                                                        :value="item">
+                                                </el-option>
+                                            </el-select>
+                                        </el-form-item>
+                                    </el-form>
+                                    <el-divider></el-divider>
+                                    <el-button @click="editUser">Save</el-button>
+                                </el-dialog>
+
+                                <el-divider direction="vertical"></el-divider>
+                                <el-link type="primary" :underline="false" @click="openUserDetailDialog(row)"
+                                         v-if="row.role!='Admin'">
+                                    Detail
+                                </el-link>
+                                <!--display selected user's detail-->
+                                <el-dialog :visible.sync="userDetailDialogVisible" width="40%" title="User detail">
+                                    <span>Role: {{userInfo.role}}</span>
+                                    <div v-if="userInfo.role=='Donor'">
+                                        <span>Total donation amount: ${{userInfo.donationAmount}}</span>
+                                        <el-table :data="userInfo.donationInfo" width="100%">
+                                            <el-table-column
+                                                    label="Donated ID"
+                                                    align="center"
+                                                    min-width="25%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.id}}</span>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="Donation type"
+                                                    align="center"
+                                                    min-width="25%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.type}}</span>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="Donation time"
+                                                    align="center"
+                                                    min-width="25%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.donationTime}}</span>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="Donation amount"
+                                                    align="center"
+                                                    min-width="25%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.amount}}</span>
+                                                </template>
+                                            </el-table-column>
+                                        </el-table>
+                                    </div>
+
+                                    <div v-if="userInfo.role=='Volunteer'">
+                                        <span>Total volunteer time: {{userInfo.volunteerTime}} hours</span>
+                                        <el-table :data="volunteerEvents" width="100%">
+                                            <el-table-column
+                                                    label="Event ID"
+                                                    align="center"
+                                                    min-width="20%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.id}}</span>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="Event type"
+                                                    align="center"
+                                                    min-width="20%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.type}}</span>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="Start time"
+                                                    align="center"
+                                                    min-width="20%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.startTime}}</span>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="End time"
+                                                    align="center"
+                                                    min-width="20%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.endTime}}</span>
+                                                </template>
+                                            </el-table-column>
+                                            <el-table-column
+                                                    label="Duty"
+                                                    align="center"
+                                                    min-width="20%">
+                                                <template slot-scope="{row}">
+                                                    <span>{{row.duty}}</span>
+                                                </template>
+                                            </el-table-column>
+                                        </el-table>
+                                    </div>
+                                </el-dialog>
+                                <el-divider direction="vertical" v-if="row.role!='Admin'"></el-divider>
+                                <el-link type="primary" :underline="false" @click="deleteUser(row)"
+                                         v-if="row.status!='2'">
+                                    Delete
+                                </el-link>
+                                <el-link type="primary" :underline="false" @click="recoverUser(row)"
+                                         v-if="row.status=='2'">
+                                    Recover
+                                </el-link>
+                                <el-divider direction="vertical"></el-divider>
+                                <el-link type="primary" :underline="false" @click="frozeUser(row)"
+                                         v-if="row.status!='1'">
+                                    Froze
+                                </el-link>
+                                <el-link type="primary" :underline="false" @click="unfrozeUser(row)"
+                                         v-if="row.status=='1'">
+                                    Unfroze
+                                </el-link>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+                <div class="event-management" v-if="currentIndex=='3'">
+                    <el-table :data="allEventList">
+                        <el-table-column
+                                label="Event ID"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{row.eventId}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Title"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{row.title}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Status"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{eventStatus[row.status]}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Start time"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{row.startTime}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="End time"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{row.endTime}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Required volunteers number"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{row.requiredVolunteersNumber}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Volunteers number so far"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{row.volunteersNumberSoFar}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Amount of fund"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>${{row.amountOfFund}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Operations"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <el-link type="primary" :underline="false" @click="openEventDetailDialog(row)">
+                                    Detail
+                                </el-link>
+                                <el-divider direction="vertical"></el-divider>
+                                <el-link type="primary" :underline="false" @click="finishEvent(row)" v-if="row.status=='0'">
+                                    Finish
+                                </el-link>
+                                <el-divider direction="vertical"></el-divider>
+                                <el-link type="primary" :underline="false" @click="deleteEvent(row)" v-if="row.status=='0'">
+                                    Delete
+                                </el-link>
+                                <el-divider direction="vertical"></el-divider>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </div>
+                <div class="program-management" v-if="currentIndex=='4'">
+                    <el-button type="primary" @click="openCreateProgramDialog">Create program</el-button>
+                    <el-table :data="programList">
+                        <el-table-column
+                                label="Program ID"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{row.programId}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Title"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{row.title}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Status"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>{{eventStatus[row.status]}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Amount of fund"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <span>${{row.amountOfFund}}</span>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Operations"
+                                align="center"
+                                min-width="100px">
+                            <template slot-scope="{row}">
+                                <el-link type="primary" :underline="false" @click="openEventsInfoDialog(row)">
+                                    Events info
+                                </el-link>
+                                <el-dialog :visible.sync="eventsInfoDialogVisible" title="Events info">
+                                    <el-button type="primary" @click="openCreateEventDialog">Create event</el-button>
+                                    <el-dialog :visible.sync="createEventDialogVisible" title="Create new event">
+                                        <el-form v-model="newEvent">
+                                            <el-form-item label="Title:">
+                                                <el-input placeholder="Input the event's title" v-model="newEvent.title"></el-input>
+                                            </el-form-item>
+
+                                            <el-form-item label="Start time:">
+                                                <el-date-picker
+                                                        v-model="newEvent.startTime"
+                                                        type="datetime"
+                                                        placeholder="Select start time"
+                                                >
+                                                </el-date-picker>
+                                            </el-form-item>
+
+                                            <el-form-item label="End time:">
+                                                <el-date-picker
+                                                        v-model="newEvent.endTime"
+                                                        type="datetime"
+                                                        placeholder="Select end time"
+                                                >
+                                                </el-date-picker>
+                                            </el-form-item>
+
+                                            <el-form-item label="Place:">
+                                                <el-input placeholder="Input holding place" v-model="newEvent.place">
+                                                </el-input>
+                                            </el-form-item>
+
+                                            <el-form-item label="Required volunteers number:">
+                                                <el-input-number v-model="newEvent.requiredVolunteersNumber" :min="1" :max="1000">
+                                                </el-input-number>
+                                            </el-form-item>
+
+                                            <el-form-item label="Description:">
+                                                <el-input placeholder="Input description" v-model="newEvent.description"
+                                                          type="textarea">
+                                                </el-input>
+                                            </el-form-item>
+
+                                        </el-form>
+                                        <el-divider></el-divider>
+                                        <el-button @click="createNewEvent">Save</el-button>
+                                    </el-dialog>
+                                    <el-table :data="eventList">
+                                        <el-table-column
+                                                label="Event ID"
+                                                align="center"
+                                                min-width="100px">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.eventId}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Title"
+                                                align="center"
+                                                min-width="100px">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.title}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Status"
+                                                align="center"
+                                                min-width="100px">
+                                            <template slot-scope="{row}">
+                                                <span>{{eventStatus[row.status]}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Start time"
+                                                align="center"
+                                                min-width="100px">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.startTime}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="End time"
+                                                align="center"
+                                                min-width="100px">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.endTime}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Required volunteers number"
+                                                align="center"
+                                                min-width="100px">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.requiredVolunteersNumber}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Volunteers number so far"
+                                                align="center"
+                                                min-width="100px">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.volunteersNumberSoFar}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Amount of fund"
+                                                align="center"
+                                                min-width="100px">
+                                            <template slot-scope="{row}">
+                                                <span>${{row.amountOfFund}}</span>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                                </el-dialog>
+
+                                <el-divider direction="vertical"></el-divider>
+                                <el-link type="primary" :underline="false" @click="openDonorsInfoDialog(row)">
+                                    Donors info
+                                </el-link>
+                                <el-dialog :visible.sync="donorsInfoDialogVisible" title="Donors donated the program">
+
+                                </el-dialog>
+
+                                <el-divider direction="vertical"></el-divider>
+                                <el-link type="primary" :underline="false" @click="openEditEventsDialog(row)">
+                                    Edit events
+                                </el-link>
+                                <el-dialog :visible.sync="editEventsDialogVisible" title="Edit events the program owned">
+                                    <el-select></el-select>
+                                </el-dialog>
+
+                                <el-divider direction="vertical"></el-divider>
+                                <el-link type="primary" :underline="false" @click="deleteTheProgram(row)"
+                                         v-if="row.status!='2'">
+                                    Delete
+                                </el-link>
+                                <el-link type="primary" :underline="false" @click="recoverProgram(row)"
+                                         v-if="row.status=='2'">
+                                    Recover
+                                </el-link>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                    <el-dialog :visible.sync="createProgramDialogVisible" title="Create new program">
+
+                        <el-form v-model="newProgram">
+                            <el-form-item label="Title:">
+                                <el-input placeholder="Input the program's title" v-model="newProgram.title"></el-input>
+                            </el-form-item>
+                        </el-form>
+                        <el-divider></el-divider>
+                        <el-button @click="createNewProgram">Create</el-button>
+
+                    </el-dialog>
+                </div>
+            </el-main>
+        </el-container>
+    </el-container>
+</div>
+</body>
+<script type="module">
+    import {editName, editStatus, editPassword, editRole} from "../js/api/user.js";
+    import {createProgram} from "../js/api/event.js";
+    var confirmPasswordValidator = (rule, value, callback)=>{
+        if (value.length==0){
+            callback(new Error('Please confirm your password!'))
+        }
+        else {
+            if ((value.length < 6) || (value.length > 15)) {
+                callback(new Error('The length should be between 6 and 15!'))
+            } else {
+                if (value != app.passwordForm.newPassword) {
+                    callback(new Error('Entered passwords differ!'))
+                } else {
+                    callback()
+                }
+            }
+        }
+    }
+    let app = new Vue({
+        el: '#app',
+        data: function () {
+            return {
+                user: localStorage.getItem("user"),
+                role: localStorage.getItem("role"),
+                roleList: ["Admin", "Donor", "Volunteer"],
+                userQuery: {
+                    role: ""
+                },
+                currentIndex: '1',
+                editMyInfoDialogVisible: false,//edit user's own info dialog
+                editPasswordDialogVisible: false,//edit user's own password dialog
+                newName: "",
+                newPassword: "",
+                userListLoading: false,
+                userList: [{
+                    userId: "123456",
+                    firstName: "AB",
+                    lastName: "C",
+                    role: "Admin",
+                    volunteerTime: "",
+                    volunteerEvents: {
+                        eventsJoined: [],
+                        eventsDoing: []
+                    },
+                    donationAmount: "",
+                    donationInfo: [],
+                    status: "0"
+                },
+                    {
+                        userId: "12345679",
+                        firstName: "AB",
+                        lastName: "D",
+                        role: "Donor",
+                        volunteerTime: "",
+                        volunteerEvents: {
+                            eventsJoined: [],
+                            eventsDoing: []
+                        },
+                        donationAmount: 100,
+                        donationInfo: [{
+                            id: "123",
+                            type: "Event",
+                            donationTime: "2021-12-01",
+                            amount: 100
+                        }],
+                        status: "0"
+                    },
+                    {
+                        userId: "12345680",
+                        firstName: "AB",
+                        lastName: "E",
+                        role: "Volunteer",
+                        volunteerTime: 100,
+                        volunteerEvents: {
+                            eventsJoined: [{
+                                id: "124",
+                                startTime: "2021-12-01",
+                                endTime: "2021-12-02",
+                                duty: "cleaner"
+                            }
+                            ],
+                            eventsDoing: [{
+                                id: "123",
+                                startTime: "2021-12-02",
+                                endTime: "2021-12-02",
+                                duty: "cleaner"
+                            }
+                            ]
+                        },
+                        donationAmount: "",
+                        donationInfo: [],
+                        status: "0"
+                    },],//List of users
+                allUserList: [],
+                eventList: [{
+                    eventId: "123",
+                    title: "ABC",
+                    startTime: "2021-12-01",
+                    endTime: "2021-12-02",
+                    place: "Beijing",
+                    amountOfFund: 100,
+                    requiredVolunteersNumber: 100,
+                    volunteersNumberSoFar: 90,
+                    description: "ABC is a event.",
+                    status: "0",
+                    programBelongsTo: "321",
+                    volunteersInfo: [],
+                    donorsInfo: [{
+                        donorId: "12345679",
+                        donationTime: "2021-12-01",
+                        amount: 100
+                    }]
+                }],
+                allEventList: [{
+                    eventId: "123",
+                    title: "ABC",
+                    startTime: "2021-12-01",
+                    endTime: "2021-12-02",
+                    place: "Beijing",
+                    amountOfFund: 100,
+                    requiredVolunteersNumber: 100,
+                    volunteersNumberSoFar: 90,
+                    description: "ABC is a event.",
+                    status: "0",
+                    programBelongsTo: "321",
+                    volunteersInfo: [],
+                    donorsInfo: [{
+                        donorId: "12345679",
+                        donationTime: "2021-12-01",
+                        amount: 100
+                    }]
+                }],
+                programList: [{
+                    programId: "321",
+                    event: [{
+                        eventId: "123",
+                    },],
+                    title: "ABCD",
+                    amountOfFund: 100,
+                    status: "0",
+                    donorsInfo: []
+                }],
+                volunteerEvents: [],//List of every events including doing and be done
+                myInfo: {
+                    userId: "12345678",
+                    firstName: "AB",
+                    lastName: "C",
+                    role: "Admin",
+                    volunteerTime: "",
+                    volunteerEvents: [],
+                    donationAmount: "",
+                    donationInfo: [],
+                    status: "0"
+                },
+                myInfoSubmitted:{
+                    userId: "12345678",
+                    firstName: "AB",
+                    lastName: "C",
+                    role: "Admin",
+                    volunteerTime: "",
+                    volunteerEvents: [],
+                    donationAmount: "",
+                    donationInfo: [],
+                    status: "0"
+                },
+                myInfoRule: {
+                    firstName: [
+                        { required: true, message: 'Please input your first name!', trigger: 'blur' },
+                        { min: 1, max: 30, message: 'The length should be between 1 and 30!', trigger: 'blur' }
+                    ],
+                    lastName: [
+                        { required: true, message: 'Please input your last name!', trigger: 'blur' },
+                        { min: 1, max: 30, message: 'The length should be between 1 and 30!', trigger: 'blur' }
+                    ],
+                },
+                passwordForm: {
+                    id: localStorage.getItem("user"),
+                    password: "",
+                    newPassword: "",
+                    confirmPassword: ""
+                },
+                passwordFormRule:{
+                    password: [
+                        { required: true, message: 'Please input your password!', trigger: 'blur' },
+                        { min: 6, max: 15, message: 'The length should be between 6 and 15!', trigger: 'blur' }
+                    ],
+                    newPassword: [
+                        { required: true, message: 'Please input your new password!', trigger: 'blur' },
+                        { min: 6, max: 15, message: 'The length should be between 6 and 15!', trigger: 'blur' }
+                    ],
+                    confirmPassword: [
+                        { required: true, validator: confirmPasswordValidator, trigger: 'blur' },
+                    ],
+                },
+                userInfo: {
+                    userId: "",
+                    firstName: "",
+                    lastName: "",
+                    role: "",
+                    volunteerTime: "",
+                    volunteerEvents: [],
+                    donationAmount: "",
+                    donationInfo: [],
+                    status: "0",
+                },
+                currentProgramId: '',
+                newEvent: {
+                    eventId: undefined,
+                    title: undefined,
+                    startTime: undefined,
+                    endTime: undefined,
+                    place: undefined,
+                    amountOfFund: undefined,
+                    requiredVolunteersNumber: 1,
+                    volunteersNumberSoFar: 0,
+                    description: "",
+                    status: "0",
+                    programBelongsTo: undefined,
+                    volunteersInfo: [],
+                    donorsInfo: []
+                },
+                newProgram: {
+                    programId: undefined,
+                    event: [],
+                    title: undefined,
+                    amountOfFund: 0,
+                    status: "0",
+                    donorsInfo: []
+                },
+                statusList: {
+                    "0": "normal",
+                    "1": "frozen",
+                    "2": "deleted"
+                },
+                eventStatus: {
+                    "0": "normal",
+                    "1": "finished",
+                    "2": "deleted/canceled"
+                },
+                editUserDialogVisible: false,
+                userDetailDialogVisible: false,
+                createEventDialogVisible: false,
+                createProgramDialogVisible: false,
+                eventsInfoDialogVisible: false,
+                donorsInfoDialogVisible: false,
+                editEventsDialogVisible: false
+            }
+        },
+        methods: {
+            getUserList(){
+
+            },
+            logout() {
+                localStorage.removeItem("user")
+                localStorage.removeItem("role")
+            },
+            ifShow(role) {
+                if (role == this.role) {
+                    return true
+                } else {
+                    return false
+                }
+            },
+            indexChange(index) {
+                this.currentIndex = index
+            },
+            openEditMyInfoDialog() {
+                this.myInfoSubmitted = JSON.parse(JSON.stringify(this.myInfo))
+                this.editMyInfoDialogVisible = true
+            },
+            openEditPasswordDialog() {
+                this.editPasswordDialogVisible = true
+            },
+            editMyInfo() {
+                let res = editName({
+                    first_name: this.myInfoSubmitted.firstName,
+                    last_name: this.myInfoSubmitted.lastName
+                })
+                if (res.code == "success") {
+                    this.$message.success('Edit your info successfully!')
+                } else {
+                    this.$message.error('Operation failed!')
+                }
+                this.editUserDialogVisible = false
+            },
+            editMyPassword() {
+                let res = editPassword({
+                    id: this.passwordForm.id,
+                    password: this.passwordForm.password,
+                    new_password: this.passwordForm.newPassword
+                })
+                if (res.code == "success") {
+                    this.$message.success('Edit password successfully!')
+                } else {
+                    this.$message.error('Operation failed!')
+                }
+                this.editPasswordDialogVisible = false
+            },
+            closeEditMyInfoDialog() {
+                this.editMyInfoDialogVisible = false
+            },
+            closeEditPasswordDialog() {
+                this.editPasswordDialogVisible = false
+            },
+            // User management part
+            queryUser(){
+                this.userListLoading = true
+                this.userList = []
+                this.allUserList.forEach(user=>{
+                    if ((user.role==this.userQuery.role) || (this.userQuery.role == "")){
+                        this.userList.push(user)
+                    }
+                })
+                this.userListLoading = false
+            },
+            openEditUserDialog(row) {
+                this.userInfo = row
+                this.editUserDialogVisible = true
+            },
+            editUser() {
+                let res = editName({
+                    first_name: this.userInfo.firstName,
+                    last_name: this.userInfo.lastName
+                })
+                if (res.code == "success") {
+                    res = editRole({
+                        id: localStorage.getItem('user'),
+                        role: this.userInfo.role
+                    })
+                    if (res.code == "success") {
+                        this.$message.success('Edit user info successfully!')
+                    } else {
+                        this.$message.error('Operation failed!')
+                    }
+                } else {
+                    this.$message.error('Operation failed!')
+                }
+                this.editUserDialogVisible = false
+            },
+            openUserDetailDialog(row) {
+                this.userInfo = row
+                this.volunteerEvents = []
+                row.volunteerEvents.eventsJoined.forEach(event => {
+                    this.volunteerEvents.push({
+                        id: event.id,
+                        startTime: event.startTime,
+                        endTime: event.endTime,
+                        duty: event.duty,
+                        type: "finished"
+                    })
+                })
+                row.volunteerEvents.eventsDoing.forEach(event => {
+                    this.volunteerEvents.push({
+                        id: event.id,
+                        startTime: event.startTime,
+                        endTime: event.endTime,
+                        duty: event.duty,
+                        type: "not finished"
+                    })
+                })
+                this.userDetailDialogVisible = true
+            },
+            deleteUser(row) {
+                let res = editStatus({
+                    'id': row.userId,
+                    'status': "2",
+                })
+                if (res.code == "success") {
+                    this.$message.success("Delete user successfully!")
+                } else {
+                    this.$message.error("Operation failed!")
+                }
+            },
+            recoverUser(row) {
+                let res = editStatus({
+                    'id': row.userId,
+                    'status': "0",
+                })
+                if (res.code == "success") {
+                    this.$message.success("Recover user successfully!")
+                } else {
+                    this.$message.error("Operation failed!")
+                }
+            },
+            frozeUser(row) {
+                let res = editStatus({
+                    'id': row.userId,
+                    'status': "1",
+                })
+                if (res.code == "success") {
+                    this.$message.success("Froze user successfully!")
+                } else {
+                    this.$message.error("Operation failed!")
+                }
+            },
+            unfrozeUser(row) {
+                let res = editStatus({
+                    'id': row.userId,
+                    'status': "0",
+                })
+                if (res.code == "success") {
+                    this.$message.success("Unfroze user successfully!")
+                } else {
+                    this.$message.error("Operation failed!")
+                }
+            },
+            //Event management part
+            openCreateEventDialog() {
+                this.newEvent = {
+                    eventId: undefined,
+                    title: undefined,
+                    startTime: undefined,
+                    endTime: undefined,
+                    place: undefined,
+                    amountOfFund: undefined,
+                    requiredVolunteersNumber: undefined,
+                    volunteersNumberSoFar: 0,
+                    description: "",
+                    status: "0",
+                    programBelongsTo: undefined,
+                    volunteersInfo: [],
+                    donorsInfo: []
+                }
+                this.createEventDialogVisible = true
+            },
+            createNewEvent() {
+                let res = createEvent({
+                    'title': this.newEvent.title,
+                    'place' : this.newEvent.place,
+                    'require_volunteers_number' : this.newEvent.requiredVolunteersNumber + "",  // 字符串形式的整数
+                    'description' : this.newEvent.description,
+                    'start' : this.newEvent.startTime, // '%Y-%m-%d %H:%M:%S'
+                    'end' : this.newEvent.endTime,
+                    'program' : this.currentProgramId //event所属的program，不能为空
+                } )
+                this.$message.success('Create event successfully!')
+                this.createEventDialogVisible = false
+            },
+            //Program management part
+            openCreateProgramDialog(){
+                this.newProgram = {
+                    programId: undefined,
+                    event: [],
+                    title: undefined,
+                    amountOfFund: 0,
+                    status: "0",
+                    donorsInfo: []
+                }
+                this.createProgramDialogVisible = true
+            },
+            openEventsInfoDialog(row){
+                this.currentProgramId = row.programId
+                this.eventsInfoDialogVisible = true
+            },
+            openDonorsInfoDialog(row){
+                this.donorsInfoDialogVisible = true
+            },
+            openEditEventsDialog(row){
+                this.editEventsDialogVisible = true
+            },
+            deleteTheProgram(row){
+
+            },
+            recoverProgram(row){
+
+            },
+            createNewProgram(){
+                let res = createProgram({
+                    "title": this.newProgram.title
+                })
+                if (res.code == 200){
+                    this.$message('Create program successfully!')
+                }
+            }
+        },
+        watch: {},
+        created: function(){
+            // this.userList = [{
+            //     userId: "123456",
+            //     firstName: "AB",
+            //     lastName: "C",
+            //     role: "Admin",
+            //     volunteerTime: "",
+            //     volunteerEvents: {
+            //         eventsJoined: [],
+            //         eventsDoing: []
+            //     },
+            //     donationAmount: "",
+            //     donationInfo: [],
+            //     status: "0"
+            // },
+            //     {
+            //         userId: "12345679",
+            //         firstName: "AB",
+            //         lastName: "D",
+            //         role: "Donor",
+            //         volunteerTime: "",
+            //         volunteerEvents: {
+            //             eventsJoined: [],
+            //             eventsDoing: []
+            //         },
+            //         donationAmount: 100,
+            //         donationInfo: [{
+            //             id: "123",
+            //             type: "Event",
+            //             donationTime: "2021-12-01",
+            //             amount: 100
+            //         }],
+            //         status: "0"
+            //     },
+            //     {
+            //         userId: "12345680",
+            //         firstName: "AB",
+            //         lastName: "E",
+            //         role: "Volunteer",
+            //         volunteerTime: 100,
+            //         volunteerEvents: {
+            //             eventsJoined: [{
+            //                 id: "124",
+            //                 startTime: "2021-12-01",
+            //                 endTime: "2021-12-02",
+            //                 duty: "cleaner"
+            //             }
+            //             ],
+            //             eventsDoing: [{
+            //                 id: "123",
+            //                 startTime: "2021-12-02",
+            //                 endTime: "2021-12-02",
+            //                 duty: "cleaner"
+            //             }
+            //             ]
+            //         },
+            //         donationAmount: "",
+            //         donationInfo: [],
+            //         status: "0"
+            //     },]
+
+            this.userList.forEach(user=>{
+                this.allUserList.push(user)
+            })
+
+        }
+    })
+</script>
+</html>
