@@ -192,13 +192,14 @@
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <script type="module">
     import {findList} from "../js/api/event.js";
-
-    new Vue({
+    const url = 'http://127.0.0.1:8000'
+    let app = new Vue({
         el: '#app',
         data: function() {
             return {
                 role: (!localStorage.getItem('role'))?"Guest":localStorage.getItem('role'),
                 currentIndex: "1",
+                currentProgram: "0",
                 programList: [{
                     programId: "321",
                     event: [{
@@ -250,18 +251,73 @@
                 this.currentIndex = index
             },
             openEventsInfoDialog(row){
-                let res = findList({
-                    "program": row.programId
-                })
-                this.eventsInfoDialogVisible = true
+                this.currentProgram = row.programId
+                this.eventList = []
+                if(window.XMLHttpRequest){
+                    var httpRequest2 = new XMLHttpRequest();
+                }else{
+                    var httpRequest2 = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest2.open('POST', url + '/event/search/', true);
+                httpRequest2.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest2.setRequestHeader("token", localStorage.getItem('token'));
+                let code = 200
+                let msg = ""
+                let data = { 'program' : this.currentProgram}
+                var para = JSON.stringify(data)
+                httpRequest2.send(para)
+                httpRequest2.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest2.readyState == 4 && httpRequest2.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest2.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        app._data.eventList = []
+                        if(JSON.stringify(json.data) !="{}")
+                        {
+                            json.data.return_event_list.forEach(item=>{
+                                app._data.eventList.push({
+                                    eventId: item.id,
+                                    title: item.title,
+                                    startTime: item.startTime,
+                                    endTime: item.endTime,
+                                    place: item.place,
+                                    requiredVolunteersNumber: item.requiredVolunteersNumber,
+                                    volunteersNumberSoFar: item.volunteersNumberSoFar,
+                                    status: item.status
+                                })
+                            })
+
+                        }
+                    }
+                app._data.eventsInfoDialogVisible = true
+                }
             },
             joinTheEvent(row){
-                let res = joinEvent({
-                    'event_id': row.eventId,
-                    'duty': 'leader'
-                })
-                if (res.code == 200){
-                    this.$message.success('Join the event successfully!')
+                let data = {event_id: row.eventId, duty:''}
+                var para = JSON.stringify(data)
+                if(window.XMLHttpRequest){
+                    var httpRequest2 = new XMLHttpRequest();
+                }else{
+                    var httpRequest2 = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest2.open('POST', url + '/event/join/', true);
+                httpRequest2.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest2.setRequestHeader("token", localStorage.getItem('token'));
+                let code = 200
+                let msg = ""
+                httpRequest2.send(para)
+                httpRequest2.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest2.readyState == 4 && httpRequest2.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest2.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        if(json.code == 200){
+                            app.$message.success('Join the event successfully!')
+                        }
+                        else{
+                            app.$message.success('You can\'t join the event!')
+                        }
+                    }
                 }
             },
             openDonateDialog(id){
@@ -270,22 +326,65 @@
                 this.donateDialogVisible = true
             },
             donate(){
-
+                var amount = this.donateForm.amount
+                let data = {amount: amount, id:this.donateForm.id}
+                var para = JSON.stringify(data)
+                if(window.XMLHttpRequest){
+                    var httpRequest2 = new XMLHttpRequest();
+                }else{
+                    var httpRequest2 = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest2.open('POST', url + '/event/donor/', true);
+                httpRequest2.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest2.setRequestHeader("token", localStorage.getItem('token'));
+                let code = 200
+                let msg = ""
+                httpRequest2.send(para)
+                httpRequest2.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest2.readyState == 4 && httpRequest2.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest2.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        if(json.code == 200){
+                            app.$message.success('Donate successfully!')
+                        }
+                        else{
+                            app.$message.success('You can\'t donate the event!')
+                        }
+                    }
+                }
             }
         },
         created: function(){
-            let res = findList({
-            })
             this.programList = []
-            if (res.code == 200){
-                res.data.return_program_list.forEach(item=>{
-                    this.programList.push(
-                        {
-                            programId: item.id,
-                            title: item.title
+                if(window.XMLHttpRequest){
+                    var httpRequest2 = new XMLHttpRequest();
+                }else{
+                    var httpRequest2 = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest2.open('POST', url + '/event/search/', true);
+                httpRequest2.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest2.setRequestHeader("token", localStorage.getItem('token'));
+                let code = 200
+                let msg = ""
+                let data = {status : '0'}
+                var para = JSON.stringify(data)
+                httpRequest2.send(para)
+                httpRequest2.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest2.readyState == 4 && httpRequest2.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest2.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        app._data.programList = []
+                        json.data.return_program_list.forEach(item=>{
+                            app._data.programList.push({
+                                programId: item.id,
+                                event: item.event,
+                                title: item.title,
+                                status: item.status})
                         })
-                })
-            }
+                    }
+                }
         }
     })
 </script>

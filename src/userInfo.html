@@ -37,17 +37,17 @@
                             Personal Profile
                         </template>
                     </el-menu-item>
-                    <el-menu-item index="2" v-if="role=='Admin'">
+                    <el-menu-item index="2" v-if="role=='Admin'"@click="getUserList">
                         <template #title>
                             User Management
                         </template>
                     </el-menu-item>
-                    <el-menu-item index="3" v-if="role=='Admin'">
+                    <el-menu-item index="3" v-if="role=='Admin'"@click="getEventList">
                         <template #title>
                             Event Management
                         </template>
                     </el-menu-item>
-                    <el-menu-item index="4" v-if="role=='Admin'">
+                    <el-menu-item index="4" v-if="role=='Admin'"@click="getProgramList">
                         <template #title>
                             Program Management
                         </template>
@@ -227,20 +227,20 @@
                                                     <span>{{row.id}}</span>
                                                 </template>
                                             </el-table-column>
-                                            <el-table-column
+                                            <!-- <el-table-column
                                                     label="Donation type"
                                                     align="center"
                                                     min-width="25%">
                                                 <template slot-scope="{row}">
                                                     <span>{{row.type}}</span>
                                                 </template>
-                                            </el-table-column>
+                                            </el-table-column> -->
                                             <el-table-column
                                                     label="Donation time"
                                                     align="center"
                                                     min-width="25%">
                                                 <template slot-scope="{row}">
-                                                    <span>{{row.donationTime}}</span>
+                                                    <span>{{row.donor_time}}</span>
                                                 </template>
                                             </el-table-column>
                                             <el-table-column
@@ -256,7 +256,7 @@
 
                                     <div v-if="userInfo.role=='Volunteer'">
                                         <span>Total volunteer time: {{userInfo.volunteerTime}} hours</span>
-                                        <el-table :data="volunteerEvents" width="100%">
+                                        <el-table :data="userInfo.volunteerEvents" width="100%">
                                             <el-table-column
                                                     label="Event ID"
                                                     align="center"
@@ -265,20 +265,20 @@
                                                     <span>{{row.id}}</span>
                                                 </template>
                                             </el-table-column>
-                                            <el-table-column
+                                            <!-- <el-table-column
                                                     label="Event type"
                                                     align="center"
                                                     min-width="20%">
                                                 <template slot-scope="{row}">
                                                     <span>{{row.type}}</span>
                                                 </template>
-                                            </el-table-column>
+                                            </el-table-column> -->
                                             <el-table-column
                                                     label="Start time"
                                                     align="center"
                                                     min-width="20%">
                                                 <template slot-scope="{row}">
-                                                    <span>{{row.startTime}}</span>
+                                                    <span>{{row.time_start}}</span>
                                                 </template>
                                             </el-table-column>
                                             <el-table-column
@@ -286,7 +286,7 @@
                                                     align="center"
                                                     min-width="20%">
                                                 <template slot-scope="{row}">
-                                                    <span>{{row.endTime}}</span>
+                                                    <span>{{row.time_end}}</span>
                                                 </template>
                                             </el-table-column>
                                             <el-table-column
@@ -396,6 +396,80 @@
                                 <el-link type="primary" :underline="false" @click="openEventDetailDialog(row)">
                                     Detail
                                 </el-link>
+                                <el-dialog :visible.sync="eventDetailDialogVisible" title="Event detail">
+                                    <el-table
+                                            :data="eventDetail.volunteersInfo"
+                                            style="width:100%;margin-bottom: 30px"
+                                            :fit="false"
+                                            fit
+                                            :v-loading="userListLoading"
+                                            row-key="id"
+                                            border
+                                            highlight-current-row
+                                    >
+                                        <el-table-column
+                                                label="Volunteer ID"
+                                                align="center"
+                                                min-width="50%">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.userId}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Volunteer Name"
+                                                align="center"
+                                                min-width="25%">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.lastName + " " + row.firstName}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Operation"
+                                                align="center"
+                                                min-width="25%">
+                                            <template slot-scope="{row}">
+                                                <el-link type="primary" :underline="false" @click="deleteVolunteerFromEvent(row)">
+                                                    Delete
+                                                </el-link>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
+                                    <el-table
+                                    :data="eventDetail.donorsInfo"
+                                    style="width:100%"
+                                    :fit="false"
+                                    fit
+                                    :v-loading="userListLoading"
+                                    row-key="id"
+                                    border
+                                    highlight-current-row
+                            >
+                                <el-table-column
+                                        label="Donor ID"
+                                        align="center"
+                                        min-width="50%">
+                                    <template slot-scope="{row}">
+                                        <span>{{row.userId}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                        label="Donor Name"
+                                        align="center"
+                                        min-width="25%">
+                                    <template slot-scope="{row}">
+                                        <span>{{row.lastName + " " + row.firstName}}</span>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column
+                                        label="Donated amount"
+                                        align="center"
+                                        min-width="25%">
+                                    <template slot-scope="{row}">
+                                        <span>{{row.donationAmount}}</span>
+                                    </template>
+                                </el-table-column>
+                            </el-table>
+                        </el-dialog>
                                 <el-divider direction="vertical"></el-divider>
                                 <el-link type="primary" :underline="false" @click="finishEvent(row)" v-if="row.status=='0'">
                                     Finish
@@ -454,7 +528,7 @@
                                 </el-link>
                                 <el-dialog :visible.sync="eventsInfoDialogVisible" title="Events info">
                                     <el-button type="primary" @click="openCreateEventDialog">Create event</el-button>
-                                    <el-dialog :visible.sync="createEventDialogVisible" title="Create new event">
+                                    <el-dialog :append-to-body="true" :visible.sync="createEventDialogVisible" title="Create new event">
                                         <el-form v-model="newEvent">
                                             <el-form-item label="Title:">
                                                 <el-input placeholder="Input the event's title" v-model="newEvent.title"></el-input>
@@ -565,19 +639,52 @@
                                         </el-table-column>
                                     </el-table>
                                 </el-dialog>
-
                                 <el-divider direction="vertical"></el-divider>
                                 <el-link type="primary" :underline="false" @click="openDonorsInfoDialog(row)">
                                     Donors info
                                 </el-link>
                                 <el-dialog :visible.sync="donorsInfoDialogVisible" title="Donors donated the program">
-
+                                    <el-table
+                                            :data="donorsListOfTheProgram"
+                                            style="width:100%"
+                                            :fit="false"
+                                            fit
+                                            :v-loading="userListLoading"
+                                            row-key="id"
+                                            border
+                                            highlight-current-row
+                                    >
+                                        <el-table-column
+                                                label="User ID"
+                                                align="center"
+                                                min-width="50%">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.userId}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="User Name"
+                                                align="center"
+                                                min-width="25%">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.lastName + " " + row.firstName}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Donated amount"
+                                                align="center"
+                                                min-width="25%">
+                                            <template slot-scope="{row}">
+                                                <span>{{row.donationAmount}}</span>
+                                            </template>
+                                        </el-table-column>
+                                    </el-table>
                                 </el-dialog>
 
                                 <el-divider direction="vertical"></el-divider>
-                                <el-link type="primary" :underline="false" @click="openEditEventsDialog(row)">
+                                <!-- <el-link type="primary" :underline="false" @click="openEditEventsDialog(row)">
                                     Edit events
-                                </el-link>
+                                </el-link> -->
                                 <el-dialog :visible.sync="editEventsDialogVisible" title="Edit events the program owned">
                                     <el-select></el-select>
                                 </el-dialog>
@@ -630,6 +737,7 @@
             }
         }
     }
+    const url = "http://127.0.0.1:8000"
     let app = new Vue({
         el: '#app',
         data: function () {
@@ -706,6 +814,14 @@
                         status: "0"
                     },],//List of users
                 allUserList: [],
+                donorsListOfTheProgram: [
+                    {
+                        userId: "12345678",
+                        firstName: "Ab",
+                        lastName: "C",
+                        donationAmount: "100"
+                    }
+                ],
                 eventList: [{
                     eventId: "123",
                     title: "ABC",
@@ -755,6 +871,10 @@
                     donorsInfo: []
                 }],
                 volunteerEvents: [],//List of every events including doing and be done
+                eventDetail: {
+                    volunteersInfo : [],
+                    donorsInfo : []
+                },
                 myInfo: {
                     userId: "12345678",
                     firstName: "AB",
@@ -857,12 +977,127 @@
                 createProgramDialogVisible: false,
                 eventsInfoDialogVisible: false,
                 donorsInfoDialogVisible: false,
-                editEventsDialogVisible: false
+                editEventsDialogVisible: false,
+                eventDetailDialogVisible : false
             }
         },
         methods: {
             getUserList(){
-
+                if(window.XMLHttpRequest){
+                    var httpRequest2 = new XMLHttpRequest();
+                }else{
+                    var httpRequest2 = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest2.open('GET', url + '/user/getalluser/', true);
+                httpRequest2.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest2.setRequestHeader("token", localStorage.getItem('token'));
+                let code = 200
+                let msg = ""
+                httpRequest2.send(null)
+                httpRequest2.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest2.readyState == 4 && httpRequest2.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest2.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        app._data.userList = []
+                        app._data.allUserList = []
+                        json.data.forEach(item=>{
+                            app._data.userList.push({
+                                userId: item.id,
+                                firstName: item.firstName,
+                                lastName: item.lastName,
+                                role: item.role,
+                                volunteerTime: item.volunteerTime,
+                                volunteerEvents: item.volunteerEvents,
+                                donationAmount: item.donationAmount,
+                                donationInfo: item.donationInfo,
+                                status: item.status})
+                            app._data.allUserList.push({
+                                userId: item.id,
+                                firstName: item.firstName,
+                                lastName: item.lastName,
+                                role: item.role,
+                                volunteerTime: item.volunteerTime,
+                                volunteerEvents: item.volunteerEvents,
+                                donationAmount: item.donationAmount,
+                                donationInfo: item.donationInfo,
+                                status: item.status})      
+                        })
+                    }
+                }
+            },
+            getProgramList(){
+                //getProgramList
+                if(window.XMLHttpRequest){
+                    var httpRequest2 = new XMLHttpRequest();
+                }else{
+                    var httpRequest2 = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest2.open('GET', url + '/event/allprogram/', true);
+                httpRequest2.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest2.setRequestHeader("token", localStorage.getItem('token'));
+                let code = 200
+                let msg = ""
+                httpRequest2.send(null)
+                httpRequest2.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest2.readyState == 4 && httpRequest2.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest2.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        app._data.programList = []
+                        json.data.forEach(item=>{
+                            app._data.programList.push({
+                                programId: item.id,
+                                event: item.event,
+                                title: item.title,
+                                amountOfFund: item.amount_of_fund,
+                                status: item.status,
+                                donorsInfo: item.info_donor})
+                        })
+                    }
+                }
+            },
+            getEventList(){
+                if(window.XMLHttpRequest){
+                    var httpRequest3 = new XMLHttpRequest();
+                    }else{
+                        var httpRequest3 = new ActiveXObject("Microsoft.XMLHTTP");
+                    };
+                httpRequest3.open('POST', url + '/event/allevent/', true);
+                httpRequest3.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest3.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify({id: "1"})
+                httpRequest3.send(para)
+                let code = 200
+                let msg = ""
+                httpRequest3.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest3.readyState == 4 && httpRequest3.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest3.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        app._data.allEventList = []
+                        if(JSON.stringify(json.data) == "{}"){}
+                        else{
+                            json.data.forEach(item=>{
+                            app._data.allEventList.push({
+                                eventId: item.id,
+                                title: item.title,
+                                startTime: item.start,
+                                endTime: item.end,
+                                place: item.place,
+                                amountOfFund: item.amount_of_fund,
+                                requiredVolunteersNumber: item.require_volunteers_number,
+                                volunteersNumberSoFar: item.now_volunteers_number,
+                                description: item.description,
+                                status: item.status,
+                                programBelongsTo: item.program,
+                                volunteersInfo: item.info_volunteer,
+                                donorsInfo: item.info_donor})
+                        })
+                        } 
+                        
+                    }
+                }
             },
             logout() {
                 localStorage.removeItem("user")
@@ -886,29 +1121,66 @@
                 this.editPasswordDialogVisible = true
             },
             editMyInfo() {
-                let res = editName({
-                    first_name: this.myInfoSubmitted.firstName,
-                    last_name: this.myInfoSubmitted.lastName
-                })
-                if (res.code == "success") {
-                    this.$message.success('Edit your info successfully!')
-                } else {
-                    this.$message.error('Operation failed!')
+                let data = {first_name: this.userInfo.firstName, last_name: this.userInfo.lastName}
+                var para = JSON.stringify(data)
+
+                if(window.XMLHttpRequest){
+                    var httpRequest3 = new XMLHttpRequest();
+                    }else{
+                        var httpRequest3 = new ActiveXObject("Microsoft.XMLHTTP");
+                    };
+                httpRequest3.open('POST', url + '/user/changeinformation/', true);
+                httpRequest3.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest3.setRequestHeader("token", localStorage.getItem('token'));
+                httpRequest3.send(para)
+                let code = 200
+                let msg = ""
+                httpRequest3.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest3.readyState == 4 && httpRequest3.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest3.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        if(code == 200){
+                            app.$message.success('Edit user info successfully!')
+                        }
+                        else{
+                            app.$message.error('Operation failed!')
+                        }
+                    }
                 }
-                this.editUserDialogVisible = false
             },
             editMyPassword() {
-                let res = editPassword({
-                    id: this.passwordForm.id,
-                    password: this.passwordForm.password,
-                    new_password: this.passwordForm.newPassword
-                })
-                if (res.code == "success") {
-                    this.$message.success('Edit password successfully!')
-                } else {
-                    this.$message.error('Operation failed!')
+                
+                let data = {id: this.passwordForm.id,password: this.passwordForm.password, new_password: this.passwordForm.newPassword}
+                var para = JSON.stringify(data)
+
+                if(window.XMLHttpRequest){
+                    var httpRequest3 = new XMLHttpRequest();
+                    }else{
+                        var httpRequest3 = new ActiveXObject("Microsoft.XMLHTTP");
+                    };
+                httpRequest3.open('POST', url + '/user/changepassword/', true);
+                httpRequest3.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest3.setRequestHeader("token", localStorage.getItem('token'));
+                httpRequest3.send(para)
+                let code = 200
+                let msg = ""
+                httpRequest3.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest3.readyState == 4 && httpRequest3.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest3.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        if(code == 200){
+                            app.$message.success('Edit password successfully!')
+                            localStorage.removeItem("user")
+                            localStorage.removeItem("role")
+                        }
+                        else{
+                            app.$message.error('Operation failed!')
+                        }
+                        app._data.editPasswordDialogVisible = false
+                    }
                 }
-                this.editPasswordDialogVisible = false
             },
             closeEditMyInfoDialog() {
                 this.editMyInfoDialogVisible = false
@@ -932,90 +1204,169 @@
                 this.editUserDialogVisible = true
             },
             editUser() {
-                let res = editName({
-                    first_name: this.userInfo.firstName,
-                    last_name: this.userInfo.lastName
-                })
-                if (res.code == "success") {
-                    res = editRole({
-                        id: localStorage.getItem('user'),
-                        role: this.userInfo.role
-                    })
-                    if (res.code == "success") {
-                        this.$message.success('Edit user info successfully!')
-                    } else {
-                        this.$message.error('Operation failed!')
+
+                let data = {id: this.userInfo.userId,first_name: this.userInfo.firstName, last_name: this.userInfo.lastName, role: this.userInfo.role}
+                var para = JSON.stringify(data)
+
+                if(window.XMLHttpRequest){
+                    var httpRequest3 = new XMLHttpRequest();
+                    }else{
+                        var httpRequest3 = new ActiveXObject("Microsoft.XMLHTTP");
+                    };
+                httpRequest3.open('POST', url + '/user/permission/', true);
+                httpRequest3.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest3.setRequestHeader("token", localStorage.getItem('token'));
+                httpRequest3.send(para)
+                let code = 200
+                let msg = ""
+                httpRequest3.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest3.readyState == 4 && httpRequest3.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest3.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        if(code == 200){
+                            app.$message.success('Edit user info successfully!')
+                        }
+                        else{
+                            app.$message.error('Operation failed!')
+                        }
                     }
-                } else {
-                    this.$message.error('Operation failed!')
                 }
-                this.editUserDialogVisible = false
             },
             openUserDetailDialog(row) {
-                this.userInfo = row
-                this.volunteerEvents = []
-                row.volunteerEvents.eventsJoined.forEach(event => {
-                    this.volunteerEvents.push({
-                        id: event.id,
-                        startTime: event.startTime,
-                        endTime: event.endTime,
-                        duty: event.duty,
-                        type: "finished"
-                    })
-                })
-                row.volunteerEvents.eventsDoing.forEach(event => {
-                    this.volunteerEvents.push({
-                        id: event.id,
-                        startTime: event.startTime,
-                        endTime: event.endTime,
-                        duty: event.duty,
-                        type: "not finished"
-                    })
-                })
+                let user_id = row.userId
+                let data = {id: user_id}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/user/getuser/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.userInfo = {
+                                userId: json.data.id,
+                                firstName: json.data.first_name,
+                                lastName: json.data.last_name,
+                                role: json.data.role,
+                                volunteerTime: json.data.working_hours,
+                                volunteerEvents: json.data.event_joined,
+                                donationAmount: json.data.donor_amount,
+                                donationInfo: json.data.donor_information,
+                                status: json.data.status,
+                            }
+                        }
+                    }
+                }
                 this.userDetailDialogVisible = true
             },
             deleteUser(row) {
-                let res = editStatus({
-                    'id': row.userId,
-                    'status': "2",
-                })
-                if (res.code == "success") {
-                    this.$message.success("Delete user successfully!")
-                } else {
-                    this.$message.error("Operation failed!")
+                let target = row.userId
+                let data = {'id': target, status: '2'}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/user/status/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Delete User successfully!')
+                        }
+                    }
                 }
             },
             recoverUser(row) {
-                let res = editStatus({
-                    'id': row.userId,
-                    'status': "0",
-                })
-                if (res.code == "success") {
-                    this.$message.success("Recover user successfully!")
-                } else {
-                    this.$message.error("Operation failed!")
+                let target = row.userId
+                let data = {'id': target, status: '0'}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/user/status/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Recover User successfully!')
+                        }
+                    }
                 }
             },
             frozeUser(row) {
-                let res = editStatus({
-                    'id': row.userId,
-                    'status': "1",
-                })
-                if (res.code == "success") {
-                    this.$message.success("Froze user successfully!")
-                } else {
-                    this.$message.error("Operation failed!")
+                let target = row.userId
+                let data = {'id': target, status: '1'}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/user/status/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Froze User successfully!')
+                        }
+                    }
                 }
             },
             unfrozeUser(row) {
-                let res = editStatus({
-                    'id': row.userId,
-                    'status': "0",
-                })
-                if (res.code == "success") {
-                    this.$message.success("Unfroze user successfully!")
-                } else {
-                    this.$message.error("Operation failed!")
+                let target = row.userId
+                let data = {'id': target, status: '0'}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/user/status/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Unfroze User successfully!')
+                        }
+                    }
                 }
             },
             //Event management part
@@ -1038,17 +1389,36 @@
                 this.createEventDialogVisible = true
             },
             createNewEvent() {
-                let res = createEvent({
-                    'title': this.newEvent.title,
-                    'place' : this.newEvent.place,
-                    'require_volunteers_number' : this.newEvent.requiredVolunteersNumber + "",  // 字符串形式的整数
-                    'description' : this.newEvent.description,
-                    'start' : this.newEvent.startTime, // '%Y-%m-%d %H:%M:%S'
-                    'end' : this.newEvent.endTime,
-                    'program' : this.currentProgramId //event所属的program，不能为空
-                } )
-                this.$message.success('Create event successfully!')
-                this.createEventDialogVisible = false
+                if(window.XMLHttpRequest){
+                    var httpRequest3 = new XMLHttpRequest();
+                    }else{
+                        var httpRequest3 = new ActiveXObject("Microsoft.XMLHTTP");
+                    };
+                httpRequest3.open('POST', url + '/event/newevent/', true);
+                httpRequest3.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest3.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify({program_id: this.currentProgramId, title: this.newEvent.title,
+                    place : this.newEvent.place,
+                    require_volunteers_number : this.newEvent.requiredVolunteersNumber + "",  // 字符串形式的整数
+                    description : this.newEvent.description,
+                    start : this.newEvent.startTime, // '%Y-%m-%d %H:%M:%S'
+                    end : this.newEvent.endTime,})
+                httpRequest3.send(para)
+                let code = 200
+                let msg = ""
+                httpRequest3.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest3.readyState == 4 && httpRequest3.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest3.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg 
+                        if (code == 200){
+                            app.$message.success('Create event successfully!')
+                            app._data.createEventDialogVisible = false   
+                        }    
+                          
+                    }
+                }
+                
             },
             //Program management part
             openCreateProgramDialog(){
@@ -1064,7 +1434,46 @@
             },
             openEventsInfoDialog(row){
                 this.currentProgramId = row.programId
-                this.eventsInfoDialogVisible = true
+                if(window.XMLHttpRequest){
+                    var httpRequest3 = new XMLHttpRequest();
+                    }else{
+                        var httpRequest3 = new ActiveXObject("Microsoft.XMLHTTP");
+                    };
+                httpRequest3.open('POST', url + '/event/allevent/', true);
+                httpRequest3.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest3.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify({id: this.currentProgramId})
+                httpRequest3.send(para)
+                let code = 200
+                let msg = ""
+                httpRequest3.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest3.readyState == 4 && httpRequest3.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest3.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        msg = json.msg
+                        app._data.eventList = []
+                        if(JSON.stringify(json.data) !="{}")
+                        {
+                            json.data.forEach(item=>{
+                            app._data.eventList.push({
+                                eventId: item.id,
+                                title: item.title,
+                                startTime: item.start,
+                                endTime: item.end,
+                                place: item.place,
+                                amountOfFund: item.amount_of_fund,
+                                requiredVolunteersNumber: item.require_volunteers_number,
+                                volunteersNumberSoFar: item.now_volunteers_number,
+                                description: item.description,
+                                status: item.status,
+                                programBelongsTo: item.program,
+                                volunteersInfo: item.info_volunteer,
+                                donorsInfo: item.info_donor})
+                            })
+                        }
+                        app._data.eventsInfoDialogVisible = true
+                    }
+                }
             },
             openDonorsInfoDialog(row){
                 this.donorsInfoDialogVisible = true
@@ -1073,86 +1482,184 @@
                 this.editEventsDialogVisible = true
             },
             deleteTheProgram(row){
-
+                let target = row.programId
+                let data = {id: target, status: '2'}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/event/status/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Delete Program successfully!')
+                        }
+                    }
+                }
             },
             recoverProgram(row){
-
+                let target = row.programId
+                let data = {id: target, status: '0'}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/event/status/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Delete Program successfully!')
+                        }
+                    }
+                }
+            },
+            // createNewProgram(){
+            //     let res = createProgram({
+            //         "title": this.newProgram.title
+            //     })
+            //     if (res.code == 200){
+            //         this.$message('Create program successfully!')
+            //     }
+            // }
+            openEventDetailDialog(row){
+                //getEventDetail
+                    this.eventDetailDialogVisible = true
+                },
+            finishEvent(row){
+                let target = row.eventId
+                let data = {id: target, status: '1'}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/event/status/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Delete Event successfully!')
+                        }
+                    }
+                }
+            },
+            deleteEvent(row){
+                let target = row.eventId
+                let data = {id: target, status: '2'}
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/event/status/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Delete Event successfully!')
+                        }
+                    }
+                }
             },
             createNewProgram(){
-                let res = createProgram({
+                let data = {
                     "title": this.newProgram.title
-                })
-                if (res.code == 200){
-                    this.$message('Create program successfully!')
+                }
+                if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/event/newprogram/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Create program successfully!')
+                            app._data.createProgramDialogVisible = false
+                        }
+                    }
                 }
             }
         },
         watch: {},
         created: function(){
-            // this.userList = [{
-            //     userId: "123456",
-            //     firstName: "AB",
-            //     lastName: "C",
-            //     role: "Admin",
-            //     volunteerTime: "",
-            //     volunteerEvents: {
-            //         eventsJoined: [],
-            //         eventsDoing: []
-            //     },
-            //     donationAmount: "",
-            //     donationInfo: [],
-            //     status: "0"
-            // },
-            //     {
-            //         userId: "12345679",
-            //         firstName: "AB",
-            //         lastName: "D",
-            //         role: "Donor",
-            //         volunteerTime: "",
-            //         volunteerEvents: {
-            //             eventsJoined: [],
-            //             eventsDoing: []
-            //         },
-            //         donationAmount: 100,
-            //         donationInfo: [{
-            //             id: "123",
-            //             type: "Event",
-            //             donationTime: "2021-12-01",
-            //             amount: 100
-            //         }],
-            //         status: "0"
-            //     },
-            //     {
-            //         userId: "12345680",
-            //         firstName: "AB",
-            //         lastName: "E",
-            //         role: "Volunteer",
-            //         volunteerTime: 100,
-            //         volunteerEvents: {
-            //             eventsJoined: [{
-            //                 id: "124",
-            //                 startTime: "2021-12-01",
-            //                 endTime: "2021-12-02",
-            //                 duty: "cleaner"
-            //             }
-            //             ],
-            //             eventsDoing: [{
-            //                 id: "123",
-            //                 startTime: "2021-12-02",
-            //                 endTime: "2021-12-02",
-            //                 duty: "cleaner"
-            //             }
-            //             ]
-            //         },
-            //         donationAmount: "",
-            //         donationInfo: [],
-            //         status: "0"
-            //     },]
-
-            this.userList.forEach(user=>{
-                this.allUserList.push(user)
+                            let query = {id: localStorage.getItem("user")}
+                            if(window.XMLHttpRequest){
+                                var httpRequest = new XMLHttpRequest();
+                            }else{
+                                var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                            };
+                            httpRequest.open('POST', url + "/user/getuser/",true);
+                            httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                            httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                            var para = JSON.stringify(query)
+                            httpRequest.send(para)
+                            let code = 200
+                            let msg = ""
+                            httpRequest.onreadystatechange = ()=> {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                                if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                                    var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                                    code = json.code
+                                    msg = json.msg
+                                    if (code == 200){
+                                        let data = json.data
+                                        app._data.myInfo = {
+                                        userId: localStorage.getItem("user"),
+                                        firstName: data.first_name,
+                                        lastName: data.last_name,
+                                        role: localStorage.getItem("role"),
+                                        volunteerTime: data.working_hours,
+                                        volunteerEvents: [],
+                                        donationAmount: data.donor_amount,
+                                        donationInfo: [],
+                                        status: "0"
+                                        }
+                                    }
+                                }
+                            }
+                            this.userList.forEach(user=>{
+                            this.allUserList.push(user)
             })
-
         }
     })
 </script>

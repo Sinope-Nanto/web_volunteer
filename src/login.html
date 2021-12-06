@@ -37,8 +37,7 @@
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
 <script type="module">
     import {login} from "../js/api/user.js";
-
-    new Vue({
+    let app = new Vue({
         el: '#app',
         data: function() {
             return {
@@ -79,6 +78,7 @@
                         var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
                         localStorage.setItem('token', json.data.token)
                         localStorage.setItem('role', json.data.role)
+                        localStorage.setItem('user', app._data.userForm.userId)
                         window.location.href="../src/index.html"
                     }
                     else if(httpRequest.readyState == 4){
