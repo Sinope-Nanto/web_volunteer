@@ -5,11 +5,14 @@
     <!-- import CSS -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="../css/userInfo.css">
+    <link rel="icon" href="http://png.weweztms.cn/icon.png" type="image/x-icon" />
+    <title>UWL Volunteer Org</title>
 </head>
 <!-- import Vue before Element -->
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
 <!-- import JavaScript -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/element-ui/lib/umd/locale/en.js"></script>
 <body>
 <div id="app">
     <el-container class="body">
@@ -412,15 +415,23 @@
                                                 align="center"
                                                 min-width="50%">
                                             <template slot-scope="{row}">
-                                                <span>{{row.userId}}</span>
+                                                <span>{{row.user_id}}</span>
                                             </template>
                                         </el-table-column>
                                         <el-table-column
-                                                label="Volunteer Name"
+                                                label="Volunteer Duty"
                                                 align="center"
                                                 min-width="25%">
                                             <template slot-scope="{row}">
-                                                <span>{{row.lastName + " " + row.firstName}}</span>
+                                                <span>{{row.duty}}</span>
+                                            </template>
+                                        </el-table-column>
+                                        <el-table-column
+                                                label="Volunteer Status"
+                                                align="center"
+                                                min-width="25%">
+                                            <template slot-scope="{row}">
+                                                <span>{{eventStatus[row.status]}}</span>
                                             </template>
                                         </el-table-column>
                                         <el-table-column
@@ -449,15 +460,15 @@
                                         align="center"
                                         min-width="50%">
                                     <template slot-scope="{row}">
-                                        <span>{{row.userId}}</span>
+                                        <span>{{row.donor_id}}</span>
                                     </template>
                                 </el-table-column>
                                 <el-table-column
-                                        label="Donor Name"
+                                        label="Time"
                                         align="center"
                                         min-width="25%">
                                     <template slot-scope="{row}">
-                                        <span>{{row.lastName + " " + row.firstName}}</span>
+                                        <span>{{row.donor_time}}</span>
                                     </template>
                                 </el-table-column>
                                 <el-table-column
@@ -465,7 +476,7 @@
                                         align="center"
                                         min-width="25%">
                                     <template slot-scope="{row}">
-                                        <span>{{row.donationAmount}}</span>
+                                        <span>{{row.amount}}</span>
                                     </template>
                                 </el-table-column>
                             </el-table>
@@ -539,6 +550,7 @@
                                                         v-model="newEvent.startTime"
                                                         type="datetime"
                                                         placeholder="Select start time"
+                                                        :picker-options="pickerOptions"
                                                 >
                                                 </el-date-picker>
                                             </el-form-item>
@@ -548,6 +560,7 @@
                                                         v-model="newEvent.endTime"
                                                         type="datetime"
                                                         placeholder="Select end time"
+                                                        :picker-options="pickerOptions"
                                                 >
                                                 </el-date-picker>
                                             </el-form-item>
@@ -719,6 +732,7 @@
 </div>
 </body>
 <script type="module">
+    ELEMENT.locale(ELEMENT.lang.en)
     import {editName, editStatus, editPassword, editRole} from "../js/api/user.js";
     import {createProgram} from "../js/api/event.js";
     var confirmPasswordValidator = (rule, value, callback)=>{
@@ -741,7 +755,7 @@
     let app = new Vue({
         el: '#app',
         data: function () {
-            return {
+            return { 
                 user: localStorage.getItem("user"),
                 role: localStorage.getItem("role"),
                 roleList: ["Admin", "Donor", "Volunteer"],
@@ -872,6 +886,7 @@
                 }],
                 volunteerEvents: [],//List of every events including doing and be done
                 eventDetail: {
+                    event_id : '1',
                     volunteersInfo : [],
                     donorsInfo : []
                 },
@@ -971,6 +986,11 @@
                     "1": "finished",
                     "2": "deleted/canceled"
                 },
+                pickerOptions: {
+　　                disabledDate: (time) => {
+　　　                 return time.getTime() < Date.now() + 8.64e7
+　　                }
+　              },  
                 editUserDialogVisible: false,
                 userDetailDialogVisible: false,
                 createEventDialogVisible: false,
@@ -1093,7 +1113,7 @@
                                 programBelongsTo: item.program,
                                 volunteersInfo: item.info_volunteer,
                                 donorsInfo: item.info_donor})
-                        })
+                            })
                         } 
                         
                     }
@@ -1541,8 +1561,60 @@
             // }
             openEventDetailDialog(row){
                 //getEventDetail
-                    this.eventDetailDialogVisible = true
+                    let target = row.eventId
+                    let data = {id: target}
+                    this.eventDetail.event_id = row.eventId
+                    if(window.XMLHttpRequest){
+                    var httpRequest = new XMLHttpRequest();
+                    }else{
+                        var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                    };
+                    httpRequest.open('POST', url + '/event/getinfo/', true);
+                    httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                    httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                    var para = JSON.stringify(data)
+                    let code = 200
+                    let msg = ""
+                    httpRequest.send(para)
+                    httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                        if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                            var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                            code = json.code
+                            if (code == 200){
+                                app._data.eventDetail.volunteersInfo = json.data.info_volunteer
+                                app._data.eventDetail.donorsInfo = json.data.info_donor
+                                app._data.eventDetailDialogVisible = true
+                            }
+                        }
+                    }
                 },
+            deleteVolunteerFromEvent(row){
+                let user_id = row.user_id
+                let event_id = this.eventDetail.event_id
+                let data = {user_id: user_id, event_id: event_id}
+                if(window.XMLHttpRequest){
+                var httpRequest = new XMLHttpRequest();
+                }else{
+                    var httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+                };
+                httpRequest.open('POST', url + '/event/quit/', true);
+                httpRequest.setRequestHeader("Content-type","application/json;charset-UTF-8");
+                httpRequest.setRequestHeader("token", localStorage.getItem('token'));
+                var para = JSON.stringify(data)
+                let code = 200
+                let msg = ""
+                httpRequest.send(para)
+                httpRequest.onreadystatechange = function () {//请求后的回调接口，可将请求成功后要执行的程序写在其中
+                    if (httpRequest.readyState == 4 && httpRequest.status == 200) {//验证请求是否发送成功
+                        var json = JSON.parse(httpRequest.responseText);//获取到服务端返回的数据
+                        code = json.code
+                        if (code == 200){
+                            app.$message.success('Delete Successfully.')
+                        }
+                    }
+                }
+
+            },
             finishEvent(row){
                 let target = row.eventId
                 let data = {id: target, status: '1'}
@@ -1622,6 +1694,7 @@
             }
         },
         watch: {},
+        
         created: function(){
                             let query = {id: localStorage.getItem("user")}
                             if(window.XMLHttpRequest){

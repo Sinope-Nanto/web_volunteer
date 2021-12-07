@@ -5,12 +5,15 @@
     <!-- import CSS -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="../css/index.css">
+    <link rel="icon" href="http://png.weweztms.cn/icon.png" type="image/x-icon" />
+    <title>UWL Volunteer Org</title>
 </head>
 <body>
     <div id="app">
         <el-container>
-            <el-header class="head">
-                <h3 class="title">Welcome! Your role status is {{role}}</h3>
+            <el-header class="head" style="height: 100px;margin-top: 50px;margin-bottom: 30px;">
+                <h2 class="title" >Welcome to UWL Volunteer Org Website <br>Your role status is {{role}}</h2>
+                
                 <div v-if="role=='Guest'" class="user-link">
                     <el-link :underline="false" href="../src/login.html" class="el-link">Login</el-link>
                     <el-link :underline="false" href="../src/register.html" class="el-link">Register</el-link>
@@ -34,6 +37,7 @@
                             <template #title>
                                 About us
                             </template>
+                            
                         </el-menu-item>
                         <el-menu-item index="2">
                             <template #title>
@@ -42,7 +46,9 @@
                         </el-menu-item>
                     </el-menu>
                     <el-main>
+                        
                         <div v-if="currentIndex=='1'">
+                            <el-button onclick="window.open('https\://8e02c5.baklib-free.com/6163/75f6')">User Manual</el-button>
                             <el-button v-if="role=='Donor'" @click="openDonateDialog('1')">Donate Us</el-button>
                             <el-dialog :visible.sync="donateDialogVisible" title="Donate">
 
@@ -190,7 +196,9 @@
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
 <!-- import JavaScript -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/element-ui/lib/umd/locale/en.js"></script>
 <script type="module">
+    ELEMENT.locale(ELEMENT.lang.en)
     import {findList} from "../js/api/event.js";
     const url = 'http://127.0.0.1:8000'
     let app = new Vue({
@@ -315,7 +323,7 @@
                             app.$message.success('Join the event successfully!')
                         }
                         else{
-                            app.$message.success('You can\'t join the event!')
+                            app.$message.error('You can\'t join the event!')
                         }
                     }
                 }

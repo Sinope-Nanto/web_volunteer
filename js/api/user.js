@@ -1,5 +1,5 @@
 const url = "http://127.0.0.1:8000"
-
+ELEMENT.locale(ELEMENT.lang.en)
 
 export function register(data){
     if(window.XMLHttpRequest){

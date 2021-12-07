@@ -5,10 +5,12 @@
     <!-- import CSS -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
     <link rel="stylesheet" href="../css/login.css">
+    <link rel="icon" href="http://png.weweztms.cn/icon.png" type="image/x-icon" />
+    <title>UWL Volunteer Org</title>
 </head>
 <body>
     <div id="app">
-        <div id="login">
+        <div id="login" style="margin-top: 50px;">
             <div class="head">
                 <h4 class="title">Login</h4>
             </div>
@@ -35,7 +37,9 @@
 <script src="https://unpkg.com/vue/dist/vue.js"></script>
 <!-- import JavaScript -->
 <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script src="https://unpkg.com/element-ui/lib/umd/locale/en.js"></script>
 <script type="module">
+    ELEMENT.locale(ELEMENT.lang.en)
     import {login} from "../js/api/user.js";
     let app = new Vue({
         el: '#app',

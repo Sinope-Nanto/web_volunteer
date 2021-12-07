@@ -1,5 +1,5 @@
 const url = "http://127.0.0.1"
-
+ELEMENT.locale(ELEMENT.lang.en)
 
 export function createEvent(data){
     if(window.XMLHttpRequest){
